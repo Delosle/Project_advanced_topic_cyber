@@ -26,23 +26,25 @@ void setup() {
   
   // Configuration ADC rapide
   ADCSRA &= ~0x07;
-  ADCSRA |= 0x05;            // Prescaler = 32
-  ADCSRA |= (1 << ADATE);    // Auto-trigger
-  ADCSRB = 0x00;             // Free running
-  ADCSRA |= (1 << ADIE);     // Interrupt
+  ADCSRA |= 0x05;            // Prescaler = 32, accelerate the ADC
+  ADCSRA |= (1 << ADATE);    // Auto-trigger => automatic conversions (analogic value -> numeric value)
+  ADCSRB = 0x00;             // Free running => No trigger event needed to continuously get data
+  ADCSRA |= (1 << ADIE);     // Interrupt at the end of each conversion
   ADCSRA |= (1 << ADEN);
-  ADCSRA |= (1 << ADSC);
+  ADCSRA |= (1 << ADSC);     // Start first conversion
   
   delay(100);
   
-  // En-tête
+  // En-tête For synchro with python code
   Serial.write(0xFF);
   Serial.write(0xAA);
   Serial.write(0x55);
   Serial.write(0xFF);
 }
 
-ISR(ADC_vect) {
+
+// After each conversion, read value in ADC register  and put it in buffer
+ISR(ADC_vect) { 
   if (!bufferReady) {
     buffer[bufferIndex++] = ADC;
     if (bufferIndex >= bufferSize) {
